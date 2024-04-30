@@ -1,84 +1,103 @@
-search(Open, Closed, _, M, _):-
-    getState(Open, [CurrentState,Parent], _),
-    checkGoalState(CurrentState, M), !, 
-    write("Search is complete!"), nl,
-    printSolution([CurrentState,Parent], Closed).
+search(N, M, Input) :-
+    TotalCells is N * M,
+    for_loop(0, TotalCells, search_state(N, M, Input)).
 
-search(Open, Closed, N, M, Input):-
+for_loop(CurrentIndex, TotalCells, Predicate) :-
+    CurrentIndex < TotalCells,
+    not(call(Predicate, CurrentIndex)),
+    NextIndex is CurrentIndex + 1,
+    for_loop(NextIndex, TotalCells, Predicate),
+    !.
+
+for_loop(_, _, _).
+
+search_state(N, M, Input, CurrentIndex) :-
+    nth0(CurrentIndex, Input, Value),
+    State = [CurrentIndex, Value],
+    Goal = State,
+    search([[State, [null, null]]], [], Goal, N, M, Input).
+
+search(Open, _, Goal, _, M, Input):-
+    getState(Open, [CurrentState, Parent], _),
+    
+    up(CurrentState, NextState, M),
+    nth0(0, NextState, NextIndex),
+    nth0(NextIndex, Input, NextColor),
+    nth0(1, Goal, NextColor),
+    nth0(0, CurrentState, CurrentIndex),
+    nth0(0, Goal, GoalIndex),
+    CurrentIndex =:= GoalIndex + 4,
+    \+ Parent = Goal,
+    !,
+
+    write("Current state: "), write(CurrentState), nl,
+    write("Current goal: "), write(Goal), nl,
+    write("Search is complete!"), nl
+    .
+
+search(Open, Closed, Goal, N, M, Input):-
     getState(Open, CurrentNode, TmpOpen),
-    getAllValidChildren(CurrentNode, TmpOpen, Closed, N, M, Input, Children), 
+    getAllValidChildren(CurrentNode, Closed, N, M, Input, Children), 
     addChildren(Children, TmpOpen, NewOpen),
     append(Closed, [CurrentNode], NewClosed),
-    search(NewOpen, NewClosed, N, M, Input).
+    %write("Open: "), write(Open), nl,
+    %write("Closed: "), write(Closed), nl,
+    search(NewOpen, NewClosed, Goal, N, M, Input).
 
-getAllValidChildren(Node, Open, Closed, N, M, Input, Children):-
-    findall(Next, getNextState(Node, Open, Closed, Next, N, M, Input), Children).
+getAllValidChildren(Node, Closed, N, M, Input, Children):-
+    findall(Next, (
+        getNextState(Node, Closed, Next, N, M),
+		%write('Found Next: '), write(Next), nl,
+		nth0(0, Next, NextState),
+        nth0(0, NextState, Index),
+        nth0(1, NextState, Color),
+        nth0(Index, Input, Color)
+    ), Children)
+	%write("Children : "), write(Children), nl
+.
 
-getNextState([State,_], Open, Closed, [Next,State], N, M, Input):-
-    move(Input, State, Next, M, N),
-    \+ member([Next,_], Open),
+getNextState([State, _], Closed, [Next,State], N, M):-
+    move(State, Next, M, N),
     \+ member([Next,_], Closed).
 
 getState([CurrentNode|Rest], CurrentNode, Rest).
 
 addChildren(Children, Open, NewOpen):-
-    append(Open, Children, NewOpen).
-
-printSolution([State, null], _):-
-    write(State), nl.
-printSolution([State, Parent], Closed):-
-    member([Parent, GrandParent], Closed),
-    printSolution([Parent, GrandParent], Closed),
-    write(State), nl.
-
-checkGoalState(CurrentState, M):-
-    length(CurrentState, Length),
-    Length2 is Length - 1,
-    nth0(Length2, CurrentState, Element1),
-    nth0(0, CurrentState, Element2),
-    Element2 =:= Element1 - M.
+    append(Children, Open, NewOpen).
 
 % MOVES 
 
-move(Input, State, Next, M, N):-
-    left(Input, State, Next, M);
-    right(Input, State, Next, M);
-    up(Input, State, Next, M);
-    down(Input, State, Next, M, N).
+move(State, Next, M, N):-
+    left(State, Next, M);
+    right(State, Next, M);
+    up(State, Next, M);
+    down(State, Next, M, N).
 
-left(Input, State, Next, M):-
-    last(State, Index),
+left(State, Next, M):-
+    nth0(0, State, Index),
+    nth0(1, State, Color),
     NewIndex is Index - 1,
-    \+ NewIndex < 0,
-    \+ 0 is ((Index) mod M),
-    nth0(NewIndex, Input, Element),
-    nth0(Index, Input, OldElement),
-    Element = OldElement,
-    append(State, [NewIndex], Next).
+    not(NewIndex < 0),
+    not(0 is ((Index) mod M)),
+    append([NewIndex, Color], [], Next).
 
-right(Input, State, Next, M):-
-    last(State, Index),
+right(State, Next, M):-
+    nth0(0, State, Index),
+    nth0(1, State, Color),
     NewIndex is Index + 1,
-    \+ 0 is ((NewIndex+1) mod M),
-    nth0(NewIndex, Input, Element),
-    nth0(Index, Input, OldElement),
-    Element = OldElement,
-    append(State, [NewIndex], Next).
+    not(0 is (NewIndex mod M)),
+    append([NewIndex, Color], [], Next).
 
-up(Input, State, Next, M):-
-    last(State, Index),
+up(State, Next, M):-
+    nth0(0, State, Index),
+    nth0(1, State, Color),
     NewIndex is Index - M,
     NewIndex > -1,
-    nth0(NewIndex, Input, Element),
-    nth0(Index, Input, OldElement),
-    Element = OldElement,
-    append(State, [NewIndex], Next).
+    append([NewIndex, Color], [], Next).
 
-down(Input, State, Next, M, N):-
-    last(State, Index),
+down(State, Next, M, N):-
+    nth0(0, State, Index),
+    nth0(1, State, Color),
     NewIndex is Index + M,
     NewIndex < M*N,
-    nth0(NewIndex, Input, Element),
-    nth0(Index, Input, OldElement),
-    Element= OldElement,
-    append(State, [NewIndex], Next).
+    append([NewIndex, Color], [], Next).
