@@ -1,6 +1,7 @@
 search(N, M, Input) :-
     TotalCells is N * M,
-    for_loop(0, TotalCells, search_state(N, M, Input)).
+    for_loop(0, TotalCells, search_state(N, M, Input))
+    .
 
 for_loop(CurrentIndex, TotalCells, Predicate) :-
     CurrentIndex < TotalCells,
@@ -9,7 +10,7 @@ for_loop(CurrentIndex, TotalCells, Predicate) :-
     for_loop(NextIndex, TotalCells, Predicate),
     !.
 
-for_loop(_, _, _).
+for_loop(_, _, _).    
 
 search_state(N, M, Input, CurrentIndex) :-
     nth0(CurrentIndex, Input, Value),
@@ -38,9 +39,7 @@ search(Open, Closed, Goal, N, M, Input):-
     addChildren(Children, TmpOpen, NewOpen),
     append(Closed, [CurrentNode], NewClosed),
     search(NewOpen, NewClosed, Goal, N, M, Input).
-
-search(_, _, _, _, _, _) :-
-    write("No Cycles Found."), nl.
+    
 
 getAllValidChildren(Node, Closed, N, M, Input, Children):-
     findall(Next, (
