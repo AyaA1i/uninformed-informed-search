@@ -17,7 +17,7 @@ search_state(N, M, Input, CurrentIndex) :-
     Goal = State,
     search([[State, [null, null]]], [], Goal, N, M, Input).
 
-search(Open, _, Goal, _, M, Input):-
+search(Open, Closed, Goal, _, M, Input):-
     getState(Open, [CurrentState, Parent], _),
     
     up(CurrentState, NextState, M),
@@ -26,13 +26,10 @@ search(Open, _, Goal, _, M, Input):-
     nth0(1, Goal, NextColor),
     nth0(0, CurrentState, CurrentIndex),
     nth0(0, Goal, GoalIndex),
-    CurrentIndex =:= GoalIndex + 4,
+    CurrentIndex =:= GoalIndex + M,
     \+ Parent = Goal,
     !,
-
-    write("Current state: "), write(CurrentState), nl,
-    write("Current goal: "), write(Goal), nl,
-    write("Search is complete!"), nl
+    printSolution([CurrentState,Parent], Closed)
     .
 
 search(Open, Closed, Goal, N, M, Input):-
@@ -40,20 +37,16 @@ search(Open, Closed, Goal, N, M, Input):-
     getAllValidChildren(CurrentNode, Closed, N, M, Input, Children), 
     addChildren(Children, TmpOpen, NewOpen),
     append(Closed, [CurrentNode], NewClosed),
-    %write("Open: "), write(Open), nl,
-    %write("Closed: "), write(Closed), nl,
     search(NewOpen, NewClosed, Goal, N, M, Input).
 
 getAllValidChildren(Node, Closed, N, M, Input, Children):-
     findall(Next, (
         getNextState(Node, Closed, Next, N, M),
-		%write('Found Next: '), write(Next), nl,
 		nth0(0, Next, NextState),
         nth0(0, NextState, Index),
         nth0(1, NextState, Color),
         nth0(Index, Input, Color)
     ), Children)
-	%write("Children : "), write(Children), nl
 .
 
 getNextState([State, _], Closed, [Next,State], N, M):-
@@ -101,3 +94,11 @@ down(State, Next, M, N):-
     NewIndex is Index + M,
     NewIndex < M*N,
     append([NewIndex, Color], [], Next).
+
+printSolution([State, [null, null]],_):-
+	write(State), nl.
+printSolution([State, Parent], Closed):-
+    member([Parent, GrandParent], Closed),
+    printSolution([Parent, GrandParent], Closed),
+    write(State), nl.
+
