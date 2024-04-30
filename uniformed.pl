@@ -39,6 +39,9 @@ search(Open, Closed, Goal, N, M, Input):-
     append(Closed, [CurrentNode], NewClosed),
     search(NewOpen, NewClosed, Goal, N, M, Input).
 
+search(_, _, _, _, _, _) :-
+    write("No Cycles Found."), nl.
+
 getAllValidChildren(Node, Closed, N, M, Input, Children):-
     findall(Next, (
         getNextState(Node, Closed, Next, N, M),
