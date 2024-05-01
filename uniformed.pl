@@ -8,6 +8,8 @@ for_loop(CurrentIndex, TotalCells, Predicate) :-
     not(call(Predicate, CurrentIndex)),
     NextIndex is CurrentIndex + 1,
     for_loop(NextIndex, TotalCells, Predicate),
+    NextIndex = TotalCells,
+    write('No cycle found'),
     !.
 
 for_loop(_, _, _).    
@@ -17,6 +19,8 @@ search_state(N, M, Input, CurrentIndex) :-
     State = [CurrentIndex, Value],
     Goal = State,
     search([[State, [null, null]]], [], Goal, N, M, Input).
+
+
 
 search(Open, Closed, Goal, _, M, Input):-
     getState(Open, [CurrentState, Parent], _),
@@ -30,6 +34,7 @@ search(Open, Closed, Goal, _, M, Input):-
     CurrentIndex =:= GoalIndex + M,
     \+ Parent = Goal,
     !,
+    
     printSolution([CurrentState,Parent], Closed)
     .
 
@@ -39,6 +44,7 @@ search(Open, Closed, Goal, N, M, Input):-
     addChildren(Children, TmpOpen, NewOpen),
     append(Closed, [CurrentNode], NewClosed),
     search(NewOpen, NewClosed, Goal, N, M, Input).
+
     
 
 getAllValidChildren(Node, Closed, N, M, Input, Children):-
@@ -103,4 +109,3 @@ printSolution([State, Parent], Closed):-
     member([Parent, GrandParent], Closed),
     printSolution([Parent, GrandParent], Closed),
     write(State), nl.
-
