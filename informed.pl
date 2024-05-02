@@ -43,8 +43,8 @@ getBestState(Open, BestChild, Rest):-
 findMin([X], X):- !.
 findMin([Head|T], Min):-
     findMin(T, TmpMin),
-    Head = [_,_,_,_,HeadH,HeadF],
-    TmpMin = [_,_,_,_,TmpH,TmpF],
+    Head = [_,_,_,_,_,HeadF],
+    TmpMin = [_,_,_,_,_,TmpF],
     (TmpF < HeadF -> Min = TmpMin ; Min = Head).
 % Instead of adding children at the end and searching for the best
 % each time using getBestState, we can make addChildren add in the
@@ -52,11 +52,11 @@ findMin([Head|T], Min):-
 % head of open.
 
 % Implementation of printSolution to print the actual solution path
-printSolution([Index,_, null, G, H, F],M,N,_):-
+printSolution([Index,_, null, _, _, _],_,N,_):-
     Row is Index // N,
     Col is Index mod N,
     write([Row,Col]), nl.
-printSolution([Index, _, Parent, G, H, F],M,N, Closed):-
+printSolution([Index, _, Parent, _, _, _],M,N, Closed):-
     member([Parent,_, GrandParent, PrevG, Ph, Pf], Closed),
     printSolution([Parent,_, GrandParent, PrevG, Ph, Pf],M,N, Closed),
     Row is Index // N,
@@ -65,7 +65,7 @@ printSolution([Index, _, Parent, G, H, F],M,N, Closed):-
 move(Index, NumList,M,N,Next,1):-
     left(Index, NumList,M,N,Next); right(Index, NumList,M,N,Next);
     up(Index, NumList,M,N,Next); down(Index, NumList,M,N,Next).
-left(Index, NumList,M,N,Next):-
+left(Index, NumList,M,_,Next):-
     nth0(Index, NumList, Color),
     not(0 is Index mod M),
     NewIndex is Index - 1,
@@ -81,7 +81,7 @@ right(Index, NumList,M,N,Next):-
     Color = NewColor,
     Next is NewIndex.
 
-up(Index, NumList,M,N,Next):-
+up(Index, NumList,_,N,Next):-
     nth0(Index, NumList, Color),
     Index >= N,
     NewIndex is Index - N,
